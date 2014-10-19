@@ -64,7 +64,7 @@ public:
     ~MainWindow();
     bool is_in(QPoint p);
     bool is_in(point p);
-    int find_way();
+    int find_way(QPoint start,QPoint finish);
     std::vector<point>::iterator MainWindow::is_in_que(point p){
        auto iter = open.begin();
        for(; iter != open.end(); ++iter)
@@ -86,6 +86,7 @@ public slots:
     void gameover();
     void moveOne(QPoint p);
     void createfood();
+    int getRandomStep(QPoint p);
 private:
     int map[MAX_SIZE][MAX_SIZE];
     QTimer *timer;

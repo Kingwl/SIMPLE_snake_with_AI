@@ -43,10 +43,12 @@ void MainWindow::paintEvent(QPaintEvent*)
                 continue;
             }else if(color == snake_head){
                 b.setColor(Qt::red);
-            }else if(color == snake_body || color == snake_foot){
+            }else if(color == snake_body ){
                 b.setColor(Qt::blue);
             }else if(color == food){
                 b.setColor(Qt::green);
+            }else if(color == snake_foot){
+                b.setColor(Qt::gray);
             }
             p.setBrush(b);
             p.drawRect(40 + 40 * i, 40 + 40 * j, 40, 40);
@@ -94,7 +96,13 @@ void MainWindow::go_down()
 }
 void MainWindow::move()
 {
-    state_now = find_way();
+    auto s_head = *(que.end()-1);
+    auto s_food = QPoint(food_pos.x(), food_pos.y());
+    auto s_foot = *(que.begin());
+    state_now = find_way(s_head, s_food);
+    if(state_now == -1){
+        state_now = find_way(s_head, s_foot);
+    }
     if(state_now == to_left)
     {
         go_left();
@@ -105,8 +113,19 @@ void MainWindow::move()
     }else if(state_now == to_down){
         go_down();
     }else{
-        QMessageBox::information(0, "", "end");
-        gameover();
+        state_now = getRandomStep(s_head);
+        if(state_now == -1){
+            QMessageBox::information(0, "", "end");
+            gameover();
+        }else if(state_now == to_left){
+            go_left();
+        }else if(state_now == to_right){
+            go_right();
+        }else if(state_now == to_up){
+            go_up();
+        }else if(state_now == to_down){
+            go_down();
+        }
     }
     update();
 }
@@ -174,14 +193,13 @@ void MainWindow::createfood()
     map[v[n].x()][v[n].y()] = food;
     food_pos = QPoint(v[n].x(), v[n].y());
 }
-int MainWindow::find_way()
+int MainWindow::find_way(QPoint start,QPoint finish)
 {
     init();
     bool flag = false;
     point s;
-    auto t = *(que.end()-1);
-    s = point(t.x(), t.y());
-    s.calcH(food_pos);
+    s = point(start.x(), start.y());
+    s.calcH(finish);
     s.calcF();
     open.push_back(s);
 
@@ -192,7 +210,7 @@ int MainWindow::find_way()
         open.erase(open.begin());
         close[tmp -> x][tmp -> y] = true;
 
-        if(tmp -> x == food_pos.x() && tmp -> y == food_pos.y())
+        if(tmp -> x == finish.x() && tmp -> y == finish.y())
         {
             ans = *tmp;
             flag = true;
@@ -208,7 +226,7 @@ int MainWindow::find_way()
                 {
                     ct -> parent = tmp;
                     ct -> g = ct -> calcG();
-                    ct -> h = ct -> calcH(food_pos);
+                    ct -> h = ct -> calcH(finish);
                     ct -> calcF();
                     open.push_back(*ct);
                 }else{
@@ -263,3 +281,43 @@ int MainWindow::find_way()
         }
     }
  }
+int MainWindow::getRandomStep(QPoint p)
+{
+    int m[MAX_SIZE][MAX_SIZE];
+    memcpy(m,map,sizeof(m));
+    bool flag = true;
+    int cou = 0;
+    int step = state_now;
+    while(flag){
+        step = (step + 1)%4;
+        switch (step) {
+        case to_left:
+                if(is_in(QPoint(p.x() - 1, p.y())) && m[p.x() - 1][p.y()] == none){
+                    flag = false;
+                }
+            break;
+        case to_right:
+                if(is_in(QPoint(p.x() + 1, p.y())) && m[p.x() + 1][p.y()] == none){
+                    flag = false;
+                }
+            break;
+        case to_up:
+                if(is_in(QPoint(p.x(), p.y() - 1)) && m[p.x()][p.y() - 1] == none){
+                    flag = false;
+                }
+            break;
+        case to_down:
+                if(is_in(QPoint(p.x(), p.y() + 1)) && m[p.x()][p.y() + 1] == none){
+                    flag = false;
+                }
+            break;
+        }
+        cou++;
+        if(cou > 400){
+            step = -1;
+            break;
+        }
+    }
+    return step;
+
+}
