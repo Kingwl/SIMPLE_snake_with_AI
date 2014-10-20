@@ -54,9 +54,7 @@ class MainWindow : public QMainWindow
             if(parent != nullptr) G += parent -> g;
             return G;
         }
-        int calcH(QPoint food_p) {
-            return sqrt((x - food_p.x()) * (x - food_p.x()) + (y - food_p.y()) * (y - food_p.y()));
-        }
+
     };
 
 public:
@@ -86,7 +84,12 @@ public slots:
     void gameover();
     void moveOne(QPoint p);
     void createfood();
+    QPoint getHead();
+    QPoint getFoot();
     int getRandomStep(QPoint p);
+    int calcH(point p, QPoint food_p) {
+        return sqrt((p.x - food_p.x()) * (p.x - food_p.x()) + (p.y - food_p.y()) * (p.y - food_p.y()));
+    }
 private:
     int map[MAX_SIZE][MAX_SIZE];
     QTimer *timer;

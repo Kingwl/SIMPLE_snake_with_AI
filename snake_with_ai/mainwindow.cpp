@@ -96,9 +96,9 @@ void MainWindow::go_down()
 }
 void MainWindow::move()
 {
-    auto s_head = *(que.end()-1);
+    auto s_head = getHead();
     auto s_food = QPoint(food_pos.x(), food_pos.y());
-    auto s_foot = *(que.begin());
+    auto s_foot = getFoot();
     state_now = find_way(s_head, s_food);
     if(state_now == -1){
         state_now = find_way(s_head, s_foot);
@@ -199,7 +199,7 @@ int MainWindow::find_way(QPoint start,QPoint finish)
     bool flag = false;
     point s;
     s = point(start.x(), start.y());
-    s.calcH(finish);
+    calcH(s, finish);
     s.calcF();
     open.push_back(s);
 
@@ -226,7 +226,7 @@ int MainWindow::find_way(QPoint start,QPoint finish)
                 {
                     ct -> parent = tmp;
                     ct -> g = ct -> calcG();
-                    ct -> h = ct -> calcH(finish);
+                    ct -> h = calcH(*ct , finish);
                     ct -> calcF();
                     open.push_back(*ct);
                 }else{
@@ -285,39 +285,35 @@ int MainWindow::getRandomStep(QPoint p)
 {
     int m[MAX_SIZE][MAX_SIZE];
     memcpy(m,map,sizeof(m));
-    bool flag = true;
-    int cou = 0;
-    int step = state_now;
-    while(flag){
-        step = (step + 1)%4;
-        switch (step) {
-        case to_left:
-                if(is_in(QPoint(p.x() - 1, p.y())) && m[p.x() - 1][p.y()] == none){
-                    flag = false;
-                }
-            break;
-        case to_right:
-                if(is_in(QPoint(p.x() + 1, p.y())) && m[p.x() + 1][p.y()] == none){
-                    flag = false;
-                }
-            break;
-        case to_up:
-                if(is_in(QPoint(p.x(), p.y() - 1)) && m[p.x()][p.y() - 1] == none){
-                    flag = false;
-                }
-            break;
-        case to_down:
-                if(is_in(QPoint(p.x(), p.y() + 1)) && m[p.x()][p.y() + 1] == none){
-                    flag = false;
-                }
-            break;
-        }
-        cou++;
-        if(cou > 400){
-            step = -1;
-            break;
+    QPoint p_a[4];
+    p_a[to_left] = QPoint(p.x() - 1, p.y());
+    p_a[to_right] = QPoint(p.x() + 1, p.y());
+    p_a[to_up] = QPoint(p.x(), p.y() - 1);
+    p_a[to_down] = QPoint(p.x(), p.y() + 1);
+    int p_l[4];
+    int i = 0;
+    int p_mn = -1;
+    int p_max = -1;
+    for(; i < 4; i++)
+    {
+        if(is_in(p_a[i]) && m[p_a[i].x()][p_a[i].y()] == none)
+        {
+            p_l[i] = calcH(point(getHead().x(),getHead().y()), food_pos);
+            if(p_l[i] > p_max)
+            {
+                p_max = p_l[i];
+                p_mn = i;
+            }
         }
     }
-    return step;
+    return p_mn;
+}
+QPoint MainWindow::getHead()
+{
+    return que.back();
+}
 
+QPoint MainWindow::getFoot()
+{
+    return que.front();
 }
